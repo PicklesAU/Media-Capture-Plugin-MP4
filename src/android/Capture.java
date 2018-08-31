@@ -1,21 +1,3 @@
-/*
-       Licensed to the Apache Software Foundation (ASF) under one
-       or more contributor license agreements.  See the NOTICE file
-       distributed with this work for additional information
-       regarding copyright ownership.  The ASF licenses this file
-       to you under the Apache License, Version 2.0 (the
-       "License"); you may not use this file except in compliance
-       with the License.  You may obtain a copy of the License at
-
-         http://www.apache.org/licenses/LICENSE-2.0
-
-       Unless required by applicable law or agreed to in writing,
-       software distributed under the License is distributed on an
-       "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-       KIND, either express or implied.  See the License for the
-       specific language governing permissions and limitations
-       under the License.
-*/
 package org.apache.cordova.mediacapture;
 
 import java.io.File;
@@ -57,10 +39,12 @@ import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
 
+
 public class Capture extends CordovaPlugin {
 
     private static final String VIDEO_3GPP = "video/3gpp";
     private static final String VIDEO_MP4 = "video/mp4";
+
     private static final String AUDIO_3GPP = "audio/3gpp";
     private static final String[] AUDIO_TYPES = new String[] {"audio/3gpp", "audio/aac", "audio/amr", "audio/wav"};
     private static final String IMAGE_JPEG = "image/jpeg";
@@ -75,6 +59,7 @@ public class Capture extends CordovaPlugin {
 //    private static final int CAPTURE_INVALID_ARGUMENT = 2;
     private static final int CAPTURE_NO_MEDIA_FILES = 3;
     private static final int CAPTURE_PERMISSION_DENIED = 4;
+	
 
     private boolean cameraPermissionInManifest;     // Whether or not the CAMERA permission is declared in AndroidManifest.xml
 
@@ -460,29 +445,73 @@ public class Capture extends CordovaPlugin {
         }
         FileUtils filePlugin = (FileUtils) pm.getPlugin("File");
         LocalFilesystemURL url = filePlugin.filesystemURLforLocalPath(fp.getAbsolutePath());
+		
+		
+        boolean fileRenamed = false;
+        String thisFile = "";
+        LocalFilesystemURL url;
+        File fp2 = null;
+		
+		int index = fp.getAbsolutePath().lastIndexOf(".");
+        String ext = fp.getAbsolutePath().substring(index);
 
-        try {
-            // File properties
-            obj.put("name", fp.getName());
-            obj.put("fullPath", Uri.fromFile(fp));
-            if (url != null) {
-                obj.put("localURL", url.toString());
-            }
-            // Because of an issue with MimeTypeMap.getMimeTypeFromExtension() all .3gpp files
-            // are reported as video/3gpp. I'm doing this hacky check of the URI to see if it
-            // is stored in the audio or video content store.
-            if (fp.getAbsoluteFile().toString().endsWith(".3gp") || fp.getAbsoluteFile().toString().endsWith(".3gpp")) {
-                if (data.toString().contains("/audio/")) {
-                    obj.put("type", AUDIO_3GPP);
-                } else {
-                    obj.put("type", VIDEO_3GPP);
-                }
+        if (ext.equals(".3gp")) {
+            thisFile = fp.getAbsolutePath().substring(0,index);
+            thisFile = thisFile+".mp4";
+            fp2 = new File(thisFile);
+            boolean ok =  fp.renameTo(fp2);
+            if (ok) {
+                fileRenamed = true;
+                Log.i(LOG_TAG, "Video renamed: " + thisFile);
             } else {
-                obj.put("type", FileHelper.getMimeType(Uri.fromFile(fp), cordova));
+                Log.i(LOG_TAG, "Video rename failed: " + thisFile);
             }
+        }
 
-            obj.put("lastModifiedDate", fp.lastModified());
-            obj.put("size", fp.length());
+        if (fileRenamed) {
+            url = filePlugin.filesystemURLforLocalPath(thisFile);
+        } else {
+            url = filePlugin.filesystemURLforLocalPath(fp.getAbsolutePath());
+        }
+		
+        try {
+			
+			if (fileRenamed){
+                // File properties
+                obj.put("name", fp2.getName());
+                obj.put("fullPath", fp2.toURI().toString());
+                if (url != null) {
+                    obj.put("localURL", url.toString());
+                }
+
+                obj.put("type", FileHelper.getMimeType(Uri.fromFile(fp2), cordova));
+                obj.put("lastModifiedDate", fp2.lastModified());
+                obj.put("size", fp2.length());
+
+            } else {
+				
+				// File properties
+				obj.put("name", fp.getName());
+				obj.put("fullPath", Uri.fromFile(fp));
+				if (url != null) {
+					obj.put("localURL", url.toString());
+				}
+				// Because of an issue with MimeTypeMap.getMimeTypeFromExtension() all .3gpp files
+				// are reported as video/3gpp. I'm doing this hacky check of the URI to see if it
+				// is stored in the audio or video content store.
+				if (fp.getAbsoluteFile().toString().endsWith(".3gp") || fp.getAbsoluteFile().toString().endsWith(".3gpp")) {
+					if (data.toString().contains("/audio/")) {
+						obj.put("type", AUDIO_3GPP);
+					} else {
+						obj.put("type", VIDEO_3GPP);
+					}
+				} else {
+					obj.put("type", FileHelper.getMimeType(Uri.fromFile(fp), cordova));
+				}
+
+				obj.put("lastModifiedDate", fp.lastModified());
+				obj.put("size", fp.length());
+			}
         } catch (JSONException e) {
             // this will never happen
             e.printStackTrace();
