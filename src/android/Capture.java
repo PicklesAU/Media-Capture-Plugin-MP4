@@ -460,16 +460,14 @@ public class Capture extends CordovaPlugin {
             } catch (IllegalAccessException e) {
             }
         }
-        FileUtils filePlugin = (FileUtils) pm.getPlugin("File");
-        LocalFilesystemURL url = filePlugin.filesystemURLforLocalPath(fp.getAbsolutePath());
-		
+        FileUtils filePlugin = (FileUtils) pm.getPlugin("File"); 
 		
         boolean fileRenamed = false;
         String thisFile = "";
         LocalFilesystemURL url;
         File fp2 = null;
 		
-		int index = fp.getAbsolutePath().lastIndexOf(".");
+	int index = fp.getAbsolutePath().lastIndexOf(".");
         String ext = fp.getAbsolutePath().substring(index);
 
         if (ext.equals(".3gp")) {
