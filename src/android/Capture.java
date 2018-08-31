@@ -409,12 +409,12 @@ public class Capture extends CordovaPlugin {
             // Get the uri of the video clip
             data = intent.getData();
         }
-
+	/*
         if( data == null){
             File movie = new File(getTempDirectoryPath(), "Capture.avi");
             data = Uri.fromFile(movie);
         }
-
+	*/
         // create a file object from the uri
         if(data == null) {
             pendingRequests.resolveWithFailure(req, createErrorObject(CAPTURE_NO_MEDIA_FILES, "Error: data is null"));
