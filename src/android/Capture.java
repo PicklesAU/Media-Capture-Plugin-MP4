@@ -477,9 +477,9 @@ public class Capture extends CordovaPlugin {
             boolean ok =  fp.renameTo(fp2);
             if (ok) {
                 fileRenamed = true;
-                Log.i(LOG_TAG, "Video renamed: " + thisFile);
+                LOG.d(LOG_TAG, "Video renamed: " + thisFile);
             } else {
-                Log.i(LOG_TAG, "Video rename failed: " + thisFile);
+                LOG.d(LOG_TAG, "Video rename failed: " + thisFile);
             }
         }
 
